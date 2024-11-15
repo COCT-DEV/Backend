@@ -1,0 +1,45 @@
+name: CI - Node.js TypeScript Express
+
+on:
+  push:
+    branches:
+      - main       # Trigger on push to main branch
+      - 'feature/*'  # Trigger on feature branches, if any
+  pull_request:
+    branches:
+      - main       # Trigger on PR to main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest   # Use latest Ubuntu for the environment
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # Define the Node.js version to use (adjust as needed)
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          npm install
+
+      # Step 4: Run lint (optional, if you have linting set up)
+      - name: Run lint
+        run: |
+          npm run lint   # Assuming you have a "lint" script in package.json
+
+      # Step 5: Run tests (optional)
+      - name: Run tests
+        run: |
+          npm run test   # Assuming you have a "test" script in package.json
+
+      # Step 6: Build TypeScript
+      - name: Build TypeScript project
+        run: |
+          npm run build   # This will run "tsc" to compile your TypeScript files into the "dist" folder
