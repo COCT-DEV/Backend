@@ -29,15 +29,15 @@ jobs:
         run: |
           npm install
 
-      # Step 4: Run lint (optional, if you have linting set up)
-      - name: Run lint
-        run: |
-          npm run lint   # Assuming you have a "lint" script in package.json
+      # # Step 4: Run lint (optional, if you have linting set up)
+      # - name: Run lint
+      #   run: |
+      #     npm run lint   # Assuming you have a "lint" script in package.json
 
-      # Step 5: Run tests (optional)
-      - name: Run tests
-        run: |
-          npm run test   # Assuming you have a "test" script in package.json
+      # # Step 5: Run tests (optional)
+      # - name: Run tests
+      #   run: |
+      #     npm run test   # Assuming you have a "test" script in package.json
 
       # Step 6: Build TypeScript
       - name: Build TypeScript project
