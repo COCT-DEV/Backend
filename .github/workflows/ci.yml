@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main       # Trigger on push to main branch
-      - 'feature/*'  # Trigger on feature branches, if any
+      - 'feat/*'  # Trigger on feature branches, if any
   pull_request:
     branches:
       - main       # Trigger on PR to main branch
