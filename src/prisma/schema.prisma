@@ -1,0 +1,140 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+    ADMIN
+    FACILITATOR
+    PREACHER
+    MEMBER
+}
+
+enum AssignableRole {
+    USHER
+    CHOIR_MEMBER
+    TECHNICIAN
+}
+
+enum RequestableRole {
+    FACILITATOR
+    PREACHER
+}
+
+enum Status {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+model User {
+    id                  Int      @id @default(autoincrement())
+    fullName            String   @map("full_name") @db.VarChar(100)
+    email               String   @unique @db.VarChar(1000)
+    password            String   @db.VarChar(255)
+    phoneNumber         String   @map("phone_number") @db.VarChar(15)
+    role                Role     @default(MEMBER)
+    notificationEnabled Boolean  @default(true) @map("notification_enabled")
+    createdAt           DateTime @default(now()) @map("created_at")
+    churchOfUser        String   @map("church_of_user")
+
+    // Relations
+    eventsPosted         Event[]
+    announcementsPosted  Announcement[]
+    assignedRoles        RoleAssignment[]
+    facilitatingGuides   StudyGuide[]
+    sermon               Sermon?
+    roleRequestsMade     RoleRequest[]    @relation("RequestingUser")
+    roleRequestsReviewed RoleRequest[]    @relation("ReviewingUser")
+
+    @@map("users")
+}
+
+model Event {
+    id          Int      @id @default(autoincrement()) @map("event_id")
+    title       String   @db.VarChar(100)
+    description String
+    startTime   DateTime @map("start_time")
+    endTime     DateTime @map("end_time")
+    createdBy   User     @relation(fields: [userId], references: [id])
+    userId      Int      @map("user_id")
+
+    // Relations
+    announcements   Announcement[]
+    roleAssignments RoleAssignment[]
+
+    @@map("events")
+}
+
+model Announcement {
+    id        Int    @id @default(autoincrement()) @map("announcement_id")
+    title     String @db.VarChar(100)
+    message   String @db.VarChar(100)
+    createdBy User   @relation(fields: [userId], references: [id])
+    userId    Int    @map("user_id")
+    event     Event? @relation(fields: [eventId], references: [id])
+    eventId   Int?   @map("event_id")
+
+    // Relations
+    roleAssignments RoleAssignment[]
+
+    @@map("announcements")
+}
+
+model RoleAssignment {
+    id             Int          @id @default(autoincrement()) @map("assignment_id")
+    createdBy      User         @relation(fields: [userId], references: [id])
+    userId         Int          @map("created_by")
+    announcement   Announcement @relation(fields: [announcementId], references: [id])
+    announcementId Int          @map("announcement_id")
+    weekStartDate  DateTime     @map("week_start_date")
+    event          Event        @relation(fields: [eventId], references: [id])
+    eventId        Int          @map("event_id")
+    createdAt      DateTime     @default(now()) @map("created_at")
+
+    @@map("role_assignments")
+}
+
+model Sermon {
+    id          Int      @id @default(autoincrement()) @map("sermon_id")
+    title       String   @db.VarChar(100)
+    preacher    User     @relation(fields: [preacherId], references: [id])
+    preacherId  Int      @unique @map("preacher_id")
+    date        DateTime
+    description String
+    audioUrl    String?  @map("audio_url")
+    videoUrl    String?  @map("video_url")
+    createdAt   DateTime @default(now()) @map("created_at")
+
+    @@map("sermons")
+}
+
+model StudyGuide {
+    id            Int      @id @default(autoincrement()) @map("guide_id")
+    title         String   @db.VarChar(100)
+    content       String
+    facilitator   User     @relation(fields: [facilitatorId], references: [id])
+    facilitatorId Int      @map("facilitator_id")
+    createdAt     DateTime @default(now()) @map("created_at")
+
+    @@map("study_guides")
+}
+
+model RoleRequest {
+    id            Int             @id @default(autoincrement()) @map("request_id")
+    user          User            @relation("RequestingUser", fields: [userId], references: [id])
+    userId        Int             @unique @map("user_id")
+    reviewer      User?           @relation("ReviewingUser", fields: [reviewerId], references: [id])
+    reviewerId    Int?            @map("reviewed_by")
+    requestedRole RequestableRole @map("requested_role")
+    status        Status          @default(PENDING)
+    submittedAt   DateTime        @map("submitted_at")
+    reviewedAt    DateTime?       @default(now()) @map("reviewed_at")
+
+    @@map("role_requests")
+}
