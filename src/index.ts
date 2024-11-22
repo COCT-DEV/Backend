@@ -1,10 +1,11 @@
 import cors from "cors";
-import swagger from "./swagger";
+import swagger from "./utils/swagger";
 import bodyParser from "body-parser";
 import limiter from "./middlewares/rateLimiter";
-import exampleRouter from "./routes/exampleRoute";
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
+import router from "./routes/auth";
+
 
 dotenv.config();
 
@@ -17,12 +18,13 @@ app.use(cors({
     methods: "GET,PUT,PATCH,POST,DELETE",
     credentials: true
 }));
+
 app.use(bodyParser.json());
 app.use(express.json());
 
 app.use("/api", limiter);
 app.use("/api-docs", swagger.swaggerUi.serve, swagger.swaggerUi.setup(swagger.specs, { explorer: true }));
-app.use("/api/v1/example", exampleRouter);
+app.use("/api", router);
 
 app.get("/", (req: Request, res: Response) => {
     res.send(`<a href="${req.protocol}://${req.get("host")}/api-docs">Swagger docs</a>`);
