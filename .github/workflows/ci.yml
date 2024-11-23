@@ -48,5 +48,4 @@ jobs:
       # Step 6: Build TypeScript
       - name: Build TypeScript project
         run: |
-          npx run prisma generate src/prisma/schema.prisma
           npm run build   # This will run "tsc" to compile your TypeScript files into the "dist" folder
