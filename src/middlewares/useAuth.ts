@@ -1,25 +1,30 @@
-import { NextFunction, Request, Response } from 'express';
-import jwt, { Secret } from 'jsonwebtoken'
-import dotenv from 'dotenv'
+import { NextFunction, Request, Response } from "express";
+import tokenService from "../utils/jwt";
+import { access } from "fs";
 
-dotenv.config();
-
-const SECRET_KEY: Secret = String(process.env.SECRET_KEY);
 const AUTHORIZATION: boolean = Boolean(process.env.AUTHORIZATION) || false
-
-//TODO: Clean up later to use TokenService
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
     const authHeader = <string>req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (token == null) return res.status(401).json({ error: "No token, authorization denied" });
+    if (token == null) 
+        {
+            res.status(401).json({ error: "No token, authorization denied" });
+            return;
+        }
 
     try {
-        jwt.verify(token, SECRET_KEY);
-        next();
+        console.log(token);
+        if (tokenService.verifyAccessToken(token)) {
+            process.env.AUTHORIZATION = "false";
+            return next();
+        }
+        res.status(401).json({ error: "Invalid token, authorization denied" });
+       
     } catch (err) {
         console.error(err);
-        return res.status(401).json({ error: "Invalid token, authorization denied" });
+        res.status(401).json({ error: "Invalid token, authorization denied" });
+        return;
     }
 
 }
