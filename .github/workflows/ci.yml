@@ -39,9 +39,9 @@ jobs:
       #   run: |
       #     npm run test   # Assuming you have a "test" script in package.json
 
-      # Step 5: Generate prisma client
-      - name: Generate Prisma client
-        run: npx prisma generate
+      # # Step 5: Generate prisma client
+      # - name: Generate Prisma client
+      #   run: npx prisma generate
 
       # Step 6: Build TypeScript
       - name: Build TypeScript project

@@ -7,7 +7,8 @@
   "scripts": {
     "start": "nodemon src/index.ts",
     "build": "tsc",
-    "serve": "node dist/index.js"
+    "serve": "node dist/index.js",
+    "postinstall": "npx prisma generate --schema src/prisma/schema.prisma"
   },
   "keywords": [],
   "author": "",
