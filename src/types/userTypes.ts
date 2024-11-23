@@ -7,6 +7,10 @@ export type UserRegistrationData = {
     churchOfUser: string;
 }
 
+export type UserLoginData = {
+    email: string,
+    password: string
+}
 export type minimalUserResponse = {
     id: number;
     fullName: string;

@@ -1,7 +1,11 @@
-import { $Enums, User } from "@prisma/client";
-import { minimalUserResponse } from "../types/userTypes";
+import { User } from "@prisma/client";
+import { minimalUserResponse } from "../../types/userTypes";
 
-
+/**
+ * 
+ * @param user user from form
+ * @returns a minimal representation of a user
+ */
 export const minimalResponse = (user: User): minimalUserResponse  => {
     const data:minimalUserResponse = {
         id: user.id,

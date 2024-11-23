@@ -5,6 +5,7 @@ import limiter from "./middlewares/rateLimiter";
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import router from "./routes/auth";
+import cookies from 'cookie-parser'
 
 
 dotenv.config();
@@ -21,7 +22,7 @@ app.use(cors({
 
 app.use(bodyParser.json());
 app.use(express.json());
-
+app.use(cookies());
 app.use("/api", limiter);
 app.use("/api-docs", swagger.swaggerUi.serve, swagger.swaggerUi.setup(swagger.specs, { explorer: true }));
 app.use("/api", router);

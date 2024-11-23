@@ -2,17 +2,14 @@ import { Prisma, User } from "@prisma/client";
 import prisma from "../prisma/client";
 import { UserRegistrationData } from "../types/userTypes";
 
-//TODO: Hash the password before saving
-//TODO:Include any default values required by your schema
-//TODO:Handle unique constraint violations (especially for email)
-//TODO:Validate all input data before attempting to create the user
+//BUG: cannot connect to database exception
 
 type CreateUserInput = Omit<Prisma.UserCreateInput, 'createdAt'>;
 
 export class UserServiceError extends Error {
     constructor(
         message: string,
-        public code: 'DUPLICATE_EMAIL' | 'DATABASE_ERROR'
+        public code: 'DUPLICATE_EMAIL' | 'DATABASE_ERROR' | 'NOT_FOUND'
     ) {
         super(message);
         this.name = 'UserServiceError';
@@ -34,5 +31,28 @@ export const createUser = async (data: CreateUserInput) => {
             throw new UserServiceError('An unexpected error occurred',"DATABASE_ERROR");
           }
         }
+        else {
+            console.log(`creation Error: ${e}`)
+        }
+    }
+}
+
+export const FindUser = async (email: string) => {
+    if (!email) {
+        throw new Error("a value for user email is required")
+    }
+    try {
+       const user = await prisma.user.findFirst({
+            where: {
+                email: email,
+            }
+        })
+        if (!user) {
+            throw new UserServiceError("User does not exist", "NOT_FOUND");
+        }
+        return user;
+    }
+    catch (err) {
+        throw new UserServiceError("An unexpected error occurred", 'DATABASE_ERROR');
     }
 }
