@@ -4,7 +4,7 @@ paths:
       summary: Register a new user
       tags:
         - Authentication
-      description: Create a new user account and return tokens
+      description: Create a new user account and return tokens(refresh token is in in the response cookie)
       requestBody:
         description: User registration data
         required: true
@@ -53,15 +53,9 @@ paths:
               schema:
                 type: object
                 properties:
-                  tokens:
-                    type: object
-                    properties:
-                      accessToken:
-                        type: string
-                        description: JWT access token
-                      refreshToken:
-                        type: string
-                        description: JWT refresh token
+                  token:
+                    type: string
+                    description: JWT access token
                   user:
                     type: object
                     properties:
@@ -215,5 +209,3 @@ paths:
                   error:
                     type: string
                     example: "Access token could not be generated"
-
-                    

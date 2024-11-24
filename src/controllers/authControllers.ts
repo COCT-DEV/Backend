@@ -30,11 +30,11 @@ export const RegisterUser = async (req: Request, res: Response): Promise<any> =>
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'strict',
                 maxAge: 7 * 24 * 60 * 60 * 1000,
-                path: '/api/auth/refresh'
+                path: '/api/auth/create'
             });
             return res.status(200).json(
                 {
-                    tokens,
+                    token: tokens.accessToken,
                     user: minimalResponse(newUser),
                 }
             )
@@ -68,7 +68,7 @@ export const LoginUser = async (req: Request, res: Response): Promise<any> => {
                 secure: true,
                 sameSite: 'strict',
                 maxAge: 7 * 24 * 60 * 60 * 1000,
-                path: '/api/auth/refresh'
+                path: '/api/auth/login'
             });
     
             return res.status(200).json(
