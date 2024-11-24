@@ -22,9 +22,9 @@ export const RegisterUser = async (req: Request, res: Response): Promise<any> =>
         const { confirm_password, ...UserData } = reqData;
         UserData.password = (await hashPassword(UserData.password)).toString();
         const newUser = await createUser(UserData);
-        const tokens = tokenService.generateTokens({ userId: newUser?.id, fullName: newUser?.fullName })
 
         if (newUser) {
+            const tokens = tokenService.generateTokens({ userId: newUser?.id, fullName: newUser?.fullName })
             res.cookie('refreshToken', tokens.refreshToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
@@ -61,8 +61,9 @@ export const LoginUser = async (req: Request, res: Response): Promise<any> => {
     try {
         const validatedUser = await FindUser(user.email);
         const isValid = await comparePassword(user.password, validatedUser.password);
-        const tokens = tokenService.generateTokens({userId: validatedUser.id, fullName: validatedUser.fullName});
+        
         if (isValid) {
+            const tokens = tokenService.generateTokens({userId: validatedUser.id, fullName: validatedUser.fullName});
             res.cookie('refreshToken', tokens.refreshToken, {
                 httpOnly: true,
                 secure: true,
@@ -77,7 +78,8 @@ export const LoginUser = async (req: Request, res: Response): Promise<any> => {
                     user:  minimalResponse(validatedUser)
                 }
             )
-        }
+        } else {
+            return res.status(400).json({ error: "Invalid credentials" })
     }
     catch (e) {
         if (e instanceof UserServiceError && e.code === "NOT_FOUND") {
