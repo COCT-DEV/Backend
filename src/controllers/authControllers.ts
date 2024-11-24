@@ -80,6 +80,7 @@ export const LoginUser = async (req: Request, res: Response): Promise<any> => {
             )
         } else {
             return res.status(400).json({ error: "Invalid credentials" })
+        }
     }
     catch (e) {
         if (e instanceof UserServiceError && e.code === "NOT_FOUND") {
