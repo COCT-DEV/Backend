@@ -38,7 +38,7 @@ class TokenService {
             type: "access"
         }
         const accessToken = jwt.sign(payload, this.accessTokenSecret as string, { algorithm: 'HS256', expiresIn: '1800s' });
-        const refreshToken = jwt.sign({userId:user.userId, type:"refresh"}, this.refreshTokenSecret as string, {expiresIn: '15m', algorithm:'HS256'})
+        const refreshToken = jwt.sign({userId:user.userId, type:"refresh"}, this.refreshTokenSecret as string, {expiresIn: '1h', algorithm:'HS256'})
         return {accessToken, refreshToken}
     }
 

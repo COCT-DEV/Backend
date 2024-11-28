@@ -60,16 +60,15 @@ export const LoginUser = async (req: Request, res: Response): Promise<any> => {
     }
     try {
         const validatedUser = await FindUser(user.email);
-        const isValid = await comparePassword(user.password, validatedUser.password);
+        const isValid = await comparePassword(user.password, validatedUser!.password);
         
-        if (isValid) {
+        if (isValid && validatedUser?.password) {
             const tokens = tokenService.generateTokens({userId: validatedUser.id, fullName: validatedUser.fullName});
             res.cookie('refreshToken', tokens.refreshToken, {
                 httpOnly: true,
                 secure: true,
                 sameSite: 'strict',
                 maxAge: 7 * 24 * 60 * 60 * 1000,
-                path: '/api/auth/login'
             });
     
             return res.status(200).json(
@@ -83,11 +82,11 @@ export const LoginUser = async (req: Request, res: Response): Promise<any> => {
         }
     }
     catch (e) {
+        console.log(e);
         if (e instanceof UserServiceError && e.code === "NOT_FOUND") {
             return res.status(400).json({ error: "Invalid credentials" })
         }
         else {
-            console.log(e);
             return res.status(500).json({ error: "An unexpected error occurred" });
         }
     }
@@ -102,12 +101,6 @@ export const RefreshToken = async (req:Request, res: Response): Promise<any>=> {
         const accessToken = tokenService.refreshAccessToken(refreshToken);
         return res.status(200).send({accessToken})
     } catch(err) {
-        res.clearCookie('refreshToken', {
-            httpOnly: true,
-            // secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            path: '/api/auth/refresh'
-        });
         console.log(err);
         return res.status(500).send({"error": "Access token could not be generated"});
     }
