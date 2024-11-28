@@ -4,7 +4,7 @@ import { UserRegistrationData } from "../types/userTypes";
 
 //BUG: cannot connect to database exception
 
-type CreateUserInput = Omit<Prisma.UserCreateInput, 'createdAt'>;
+type CreateUserInput = Omit<Prisma.UserCreateInput, 'createdAt' | 'role'>;
 
 export class UserServiceError extends Error {
     constructor(
@@ -19,7 +19,12 @@ export class UserServiceError extends Error {
 export const createUser = async (data: CreateUserInput) => {
     try {
         const user = await prisma.user.create({
-            data: data
+            data: {
+                ...data,
+                role: {
+                    create: { name: "MEMBER"} // Use the ID of the default MEMBER role
+                  }
+            }
         })
         return user
     } catch (e) {

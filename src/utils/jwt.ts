@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config();
 
 interface UserPayload {
-    userId: number | undefined,
+    userId: string | undefined,
     fullName: string | undefined,
 }
 interface Tokens {
