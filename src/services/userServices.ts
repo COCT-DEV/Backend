@@ -18,16 +18,27 @@ export class UserServiceError extends Error {
 
 export const createUser = async (data: CreateUserInput) => {
     try {
+        let memberRole = await prisma.userRoles.findFirst({
+            where: {name: "MEMBER"}
+        });
+        if (!memberRole) {
+            prisma.userRoles.create({
+                data: {
+                    name: "MEMBER"
+                }
+            })
+        }
         const user = await prisma.user.create({
             data: {
                 ...data,
                 role: {
-                    create: { id: 1 } // Use the ID of the default MEMBER role
+                    connect: { id: memberRole?.id } 
                 }
             }
         })
-        return user
+        return user;
     } catch (e) {
+        console.log(e);
         if (e instanceof Prisma.PrismaClientKnownRequestError) {
             if (e.code === 'P2002') {
                 throw new UserServiceError("User with this email already exists", "DUPLICATE_EMAIL")

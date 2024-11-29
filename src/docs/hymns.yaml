@@ -17,9 +17,8 @@ paths:
           schema:
             type: string
             enum: [TWI, ENGLISH]
-          description: Language version of the hymns
-          required: false
-          default: TWI
+          description: Language version of the hymns (default is Twi)
+          required: false 
       responses:
         '200':
           description: Successfully retrieved hymn titles

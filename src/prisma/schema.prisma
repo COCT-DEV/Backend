@@ -51,7 +51,7 @@ model User {
 
 model UserRoles {
     id   Int    @id @default(autoincrement()) @map("role_id")
-    name String @default("MEMBER") @map("role_name") @db.VarChar(50)
+    name String @default("MEMBER") @map("role_name") @db.VarChar(50)@unique
 
     UserPermissions UserPermissions[]
 
