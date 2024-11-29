@@ -12,7 +12,7 @@ export type UserLoginData = {
     password: string
 }
 export type minimalUserResponse = {
-    id: number;
+    id: string;
     fullName: string;
     email: string;
     phoneNumber: string;
