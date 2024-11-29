@@ -4,7 +4,7 @@ import { UserRegistrationData } from "../types/userTypes";
 
 //BUG: cannot connect to database exception
 
-type CreateUserInput = Omit<Prisma.UserCreateInput, 'createdAt'>;
+type CreateUserInput = Omit<Prisma.UserCreateInput, 'createdAt' | 'role'>;
 
 export class UserServiceError extends Error {
     constructor(
@@ -19,17 +19,22 @@ export class UserServiceError extends Error {
 export const createUser = async (data: CreateUserInput) => {
     try {
         const user = await prisma.user.create({
-            data: data
+            data: {
+                ...data,
+                role: {
+                    create: { id: 1 } // Use the ID of the default MEMBER role
+                }
+            }
         })
         return user
     } catch (e) {
         if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          if (e.code === 'P2002') {
-              throw new UserServiceError("User with this email already exists", "DUPLICATE_EMAIL")
-          }
-          else {
-            throw new UserServiceError('An unexpected error occurred',"DATABASE_ERROR");
-          }
+            if (e.code === 'P2002') {
+                throw new UserServiceError("User with this email already exists", "DUPLICATE_EMAIL")
+            }
+            else {
+                throw new UserServiceError('An unexpected error occurred', "DATABASE_ERROR");
+            }
         }
         else {
             console.log(`creation Error: ${e}`)
@@ -42,17 +47,21 @@ export const FindUser = async (email: string) => {
         throw new Error("a value for user email is required")
     }
     try {
-       const user = await prisma.user.findFirst({
+        const user = await prisma.user.findFirst({
             where: {
                 email: email,
             }
         })
-        if (!user) {
+        if (user === null) {
             throw new UserServiceError("User does not exist", "NOT_FOUND");
         }
         return user;
     }
     catch (err) {
+        console.log(err)
+        if (err instanceof UserServiceError) {
+            throw new UserServiceError(err.message, err.code);
+        }
         throw new UserServiceError("An unexpected error occurred", 'DATABASE_ERROR');
     }
 }

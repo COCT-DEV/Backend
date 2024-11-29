@@ -32,7 +32,9 @@ export const validateRegistrationData = (
 	if (!emailRegex.test(userInfo.email)) {
 		return { isValid: false, error: "Invalid email format" };
 	}
-
+	if (typeof(userInfo.phoneNumber) !== "string") {
+		return { isValid: false, error: "Phone number must be a string" };
+	}
 	if (!phoneRegex.test(userInfo.phoneNumber)) {
 		return { isValid: false, error: "Invalid phone number format" };
 	}

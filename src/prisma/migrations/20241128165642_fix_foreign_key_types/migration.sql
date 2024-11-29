@@ -1,12 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the `User` table. If the table is not empty, all the data it contains will be lost.
-
-*/
--- CreateEnum
-CREATE TYPE "Role" AS ENUM ('ADMIN', 'FACILITATOR', 'PREACHER', 'MEMBER');
-
 -- CreateEnum
 CREATE TYPE "AssignableRole" AS ENUM ('USHER', 'CHOIR_MEMBER', 'TECHNICIAN');
 
@@ -16,54 +7,71 @@ CREATE TYPE "RequestableRole" AS ENUM ('FACILITATOR', 'PREACHER');
 -- CreateEnum
 CREATE TYPE "Status" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
--- DropTable
-DROP TABLE "User";
+-- CreateEnum
+CREATE TYPE "version" AS ENUM ('ENGLISH', 'TWi');
 
 -- CreateTable
 CREATE TABLE "users" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "full_name" VARCHAR(100) NOT NULL,
     "email" VARCHAR(1000) NOT NULL,
     "password" VARCHAR(255) NOT NULL,
     "phone_number" VARCHAR(15) NOT NULL,
-    "role" "Role" NOT NULL DEFAULT 'MEMBER',
     "notification_enabled" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "church_of_user" TEXT NOT NULL,
+    "role_id" INTEGER NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
+CREATE TABLE "UserRoles" (
+    "role_id" SERIAL NOT NULL,
+    "role_name" VARCHAR(50) NOT NULL DEFAULT 'MEMBER',
+
+    CONSTRAINT "UserRoles_pkey" PRIMARY KEY ("role_id")
+);
+
+-- CreateTable
+CREATE TABLE "UserPermissions" (
+    "permission_id" SERIAL NOT NULL,
+    "permission_name" VARCHAR(50) NOT NULL DEFAULT 'CanWrite',
+    "role_id" INTEGER NOT NULL,
+
+    CONSTRAINT "UserPermissions_pkey" PRIMARY KEY ("permission_id")
+);
+
+-- CreateTable
 CREATE TABLE "events" (
-    "event_id" SERIAL NOT NULL,
+    "event_id" UUID NOT NULL,
     "title" VARCHAR(100) NOT NULL,
     "description" TEXT NOT NULL,
     "start_time" TIMESTAMP(3) NOT NULL,
     "end_time" TIMESTAMP(3) NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" UUID NOT NULL,
 
     CONSTRAINT "events_pkey" PRIMARY KEY ("event_id")
 );
 
 -- CreateTable
 CREATE TABLE "announcements" (
-    "announcement_id" SERIAL NOT NULL,
+    "announcement_id" UUID NOT NULL,
     "title" VARCHAR(100) NOT NULL,
     "message" VARCHAR(100) NOT NULL,
-    "user_id" INTEGER NOT NULL,
-    "event_id" INTEGER,
+    "user_id" UUID NOT NULL,
+    "event_id" UUID,
 
     CONSTRAINT "announcements_pkey" PRIMARY KEY ("announcement_id")
 );
 
 -- CreateTable
 CREATE TABLE "role_assignments" (
-    "assignment_id" SERIAL NOT NULL,
-    "created_by" INTEGER NOT NULL,
-    "announcement_id" INTEGER NOT NULL,
+    "assignment_id" UUID NOT NULL,
+    "created_by" UUID NOT NULL,
+    "announcement_id" UUID NOT NULL,
     "week_start_date" TIMESTAMP(3) NOT NULL,
-    "event_id" INTEGER NOT NULL,
+    "event_id" UUID NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "role_assignments_pkey" PRIMARY KEY ("assignment_id")
@@ -71,9 +79,9 @@ CREATE TABLE "role_assignments" (
 
 -- CreateTable
 CREATE TABLE "sermons" (
-    "sermon_id" SERIAL NOT NULL,
+    "sermon_id" UUID NOT NULL,
     "title" VARCHAR(100) NOT NULL,
-    "preacher_id" INTEGER NOT NULL,
+    "preacher_id" UUID NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
     "description" TEXT NOT NULL,
     "audio_url" TEXT,
@@ -85,10 +93,10 @@ CREATE TABLE "sermons" (
 
 -- CreateTable
 CREATE TABLE "study_guides" (
-    "guide_id" SERIAL NOT NULL,
+    "guide_id" UUID NOT NULL,
     "title" VARCHAR(100) NOT NULL,
     "content" TEXT NOT NULL,
-    "facilitator_id" INTEGER NOT NULL,
+    "facilitator_id" UUID NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "study_guides_pkey" PRIMARY KEY ("guide_id")
@@ -96,15 +104,34 @@ CREATE TABLE "study_guides" (
 
 -- CreateTable
 CREATE TABLE "role_requests" (
-    "request_id" SERIAL NOT NULL,
-    "user_id" INTEGER NOT NULL,
-    "reviewed_by" INTEGER,
+    "request_id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    "reviewed_by" UUID,
     "requested_role" "RequestableRole" NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'PENDING',
     "submitted_at" TIMESTAMP(3) NOT NULL,
     "reviewed_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "role_requests_pkey" PRIMARY KEY ("request_id")
+);
+
+-- CreateTable
+CREATE TABLE "Hymn" (
+    "id" SERIAL NOT NULL,
+    "hymn_number" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "lyrics" TEXT NOT NULL,
+
+    CONSTRAINT "Hymn_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "HymnVersion" (
+    "hymnVerId" SERIAL NOT NULL,
+    "hymn_id" INTEGER NOT NULL,
+    "hymn_version" "version" NOT NULL DEFAULT 'TWi',
+
+    CONSTRAINT "HymnVersion_pkey" PRIMARY KEY ("hymnVerId")
 );
 
 -- CreateIndex
@@ -115,6 +142,12 @@ CREATE UNIQUE INDEX "sermons_preacher_id_key" ON "sermons"("preacher_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "role_requests_user_id_key" ON "role_requests"("user_id");
+
+-- AddForeignKey
+ALTER TABLE "users" ADD CONSTRAINT "users_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "UserRoles"("role_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserPermissions" ADD CONSTRAINT "UserPermissions_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "UserRoles"("role_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "events" ADD CONSTRAINT "events_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -145,3 +178,6 @@ ALTER TABLE "role_requests" ADD CONSTRAINT "role_requests_user_id_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "role_requests" ADD CONSTRAINT "role_requests_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "HymnVersion" ADD CONSTRAINT "HymnVersion_hymn_id_fkey" FOREIGN KEY ("hymn_id") REFERENCES "Hymn"("id") ON DELETE CASCADE ON UPDATE CASCADE;
