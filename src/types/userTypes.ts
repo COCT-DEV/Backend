@@ -17,4 +17,17 @@ export type minimalUserResponse = {
     email: string;
     phoneNumber: string;
     churchOfUser: string;
+    role_id: number;
+}
+
+export type UserUpdateData = {
+    id: string;
+    fullName?: string;
+    email?: string;
+    phoneNumber?: string;
+    churchOfUser?: string;   
+}
+
+export type DeleteData = {
+    UserId: string;
 }

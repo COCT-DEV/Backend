@@ -6,7 +6,6 @@ const AUTHORIZATION: boolean = Boolean(process.env.AUTHORIZATION) || false
 export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
     const authHeader = <string>req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    console.log(token);
     if (token == null) 
         {
             res.status(401).json({ error: "No token, authorization denied" });

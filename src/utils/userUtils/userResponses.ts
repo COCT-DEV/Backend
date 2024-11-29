@@ -1,5 +1,5 @@
 import { User } from "@prisma/client";
-import { minimalUserResponse } from "../../types/userTypes";
+import { minimalUserResponse, UserUpdateData } from "../../types/userTypes";
 
 /**
  * 
@@ -12,7 +12,8 @@ export const minimalResponse = (user: User): minimalUserResponse  => {
         fullName: user.fullName,
         email: user.email,
         phoneNumber: user.phoneNumber,
-        churchOfUser: user.churchOfUser
+        churchOfUser: user.churchOfUser,
+        role_id: user.role_id
     }
     return data
 }

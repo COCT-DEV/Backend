@@ -1,10 +1,12 @@
 import { Request, Response } from "express"
-import { createUser, FindUser, UserServiceError } from "../services/userServices";
+import { createUser, DeleteUserData, FindUser, FindUserById, UpdateUserData, UserServiceError } from "../services/userServices";
 import { minimalResponse } from "../utils/userUtils/userResponses";
-import { UserLoginData, UserRegistrationData } from "../types/userTypes";
-import { validateLoginData, validateRegistrationData } from "../utils/userUtils/validate";
+import { DeleteData, UserLoginData, UserRegistrationData, UserUpdateData } from "../types/userTypes";
+import { validateLoginData, validateRegistrationData, validateUpdateData } from "../utils/userUtils/validate";
 import { comparePassword, hashPassword } from "../utils/hashers";
 import tokenService from "../utils/jwt";
+import { error } from "console";
+import e from "cors";
 
 //TODO: consider using middleware for error handling
 //TODO: store refresh token as cookie in http response
@@ -27,7 +29,6 @@ export const RegisterUser = async (req: Request, res: Response): Promise<any> =>
             const tokens = tokenService.generateTokens({ userId: newUser?.id, fullName: newUser?.fullName })
             res.cookie('refreshToken', tokens.refreshToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
                 sameSite: 'strict',
                 maxAge: 7 * 24 * 60 * 60 * 1000,
                 path: '/api/auth/create'
@@ -102,6 +103,75 @@ export const RefreshToken = async (req:Request, res: Response): Promise<any>=> {
         return res.status(200).send({accessToken})
     } catch(err) {
         console.log(err);
-        return res.status(500).send({"error": "Access token could not be generated"});
+        return res.status(500).send({error : "Access token could not be generated"});
+    }
+}
+
+
+export const UpdateUser = async(req: Request, res: Response): Promise<any> => {
+    const userData = req.body as UserUpdateData;
+    const validated = validateUpdateData(userData);
+
+    if (!validated.isValid) {
+        return res.status(400).json({error: validated.error})
+    }
+
+    try {
+        const foundUser = await FindUserById(userData.id);
+        if (foundUser) {
+            const updatedUser = minimalResponse(await UpdateUserData(userData));
+            return res.status(202).json({
+                user: updatedUser
+            })
+        } else {
+            throw new UserServiceError("User not found", "NOT_FOUND");
+        }
+    } catch (err) {
+        if (err instanceof UserServiceError) {
+            switch (err.code) {
+                case "INVALID_DETAILS":
+                    return res.status(409).json({ "error": err.message })
+                case "NOT_FOUND":
+                    return res.status(409).json({ "error": err.message })
+                default:
+                    return res.status(500).json({ "error": "Internal Server Error" })
+            }
+        } else {
+            console.error("Unexpected error:", err);
+            return res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
+}
+
+
+export const DeleteUser = async(req: Request, res: Response): Promise<any> => {
+    const {UserId} = req.body as DeleteData;
+
+    if (!UserId) {
+        return res.status(400).json({error: "User id is required"})
+    }
+
+    try {
+        const foundUser = await FindUserById(UserId);       
+        if (foundUser) {
+            await DeleteUserData(UserId);
+            return res.sendStatus(204);
+        } else {
+            throw new UserServiceError("User not found", "NOT_FOUND");
+        }
+    } catch (err) {
+        if (err instanceof UserServiceError) {
+            switch (err.code) {
+                case "INVALID_DETAILS":
+                    return res.status(409).json({ "error": err.message })
+                case "NOT_FOUND":
+                    return res.status(404).json({ "error": err.message })
+                default:
+                    return res.status(500).json({ "error": "Internal Server Error" })
+            }
+        } else {
+            console.error("Unexpected error:", err);
+            return res.status(500).json({ error: "Internal Server Error" });
+        }
     }
 }

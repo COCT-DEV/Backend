@@ -1,16 +1,9 @@
 import { Version } from "@prisma/client";
 import prisma from "../prisma/client"
 import { PrismaClientValidationError } from "@prisma/client/runtime/library";
+import { HymnServiceError } from "../utils/errors/ServiceErrors";
 
-export class HymnServiceError extends Error {
-    constructor(
-        message: string,
-        public code: 'DATABASE_ERROR' | 'NOT_FOUND'
-    ) {
-        super(message);
-        this.name = 'UserServiceError';
-    }
-}
+
 
 export const listTitles = async (version: Version) => {
     try {
@@ -65,3 +58,5 @@ export const getHymnal = async (hymnId: string) => {
         }
     }
 }
+
+export { HymnServiceError };

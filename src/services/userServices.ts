@@ -1,20 +1,11 @@
 import { Prisma, User } from "@prisma/client";
 import prisma from "../prisma/client";
-import { UserRegistrationData } from "../types/userTypes";
+import { UserRegistrationData, UserUpdateData } from "../types/userTypes";
+import { UserServiceError } from "../utils/errors/ServiceErrors";
+import { PrismaClientInitializationError, PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
-//BUG: cannot connect to database exception
 
 type CreateUserInput = Omit<Prisma.UserCreateInput, 'createdAt' | 'role'>;
-
-export class UserServiceError extends Error {
-    constructor(
-        message: string,
-        public code: 'DUPLICATE_EMAIL' | 'DATABASE_ERROR' | 'NOT_FOUND'
-    ) {
-        super(message);
-        this.name = 'UserServiceError';
-    }
-}
 
 export const createUser = async (data: CreateUserInput) => {
     try {
@@ -76,3 +67,67 @@ export const FindUser = async (email: string) => {
         throw new UserServiceError("An unexpected error occurred", 'DATABASE_ERROR');
     }
 }
+
+export const FindUserById = async (id: string) => {
+    if (!id) {
+        throw new UserServiceError("User ID is required", 'INVALID_DETAILS');
+    }
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id }
+        });
+        
+        if (!user) {
+            throw new UserServiceError("User not found", "NOT_FOUND");
+        }
+        return user;
+    } catch (err) {
+        if (err instanceof PrismaClientKnownRequestError) {
+            if (err.code === 'P2023') {
+                throw new UserServiceError("User ID is invalid", 'INVALID_DETAILS')
+            }
+        }
+        else if (err instanceof UserServiceError) {
+            throw new UserServiceError(err.message, err.code);
+        } else {
+            throw new UserServiceError("An unexpected error occurred", 'DATABASE_ERROR');
+        }
+    }
+}
+
+export const DeleteUserData = async (id: string) => {
+    try {
+        await prisma.user.delete({
+            where:{id: id}
+        })
+    } catch(err) {
+        if (err instanceof PrismaClientKnownRequestError) {
+            if (err.code === "P2002") {
+                throw  new UserServiceError('User Account could not be deleted', 'NOT_FOUND')
+            } else {
+                throw new UserServiceError('A unexpected error occurred', 'DATABASE_ERROR')
+            }
+        } else {
+            console.log(err);
+            throw new UserServiceError("An unexpected error occurred", 'DATABASE_ERROR')
+        }
+    }
+}
+
+export const UpdateUserData = async (data: UserUpdateData) => {
+    try {
+        const updatedUser = await prisma.user.update({
+            where: {
+                id: data.id
+            },
+            data: {
+                ...data
+            }
+        })
+        return updatedUser;
+    } catch (err) {
+        throw new UserServiceError("A unexpected error occurred", 'DATABASE_ERROR')
+    }
+}
+
+export { UserServiceError };
