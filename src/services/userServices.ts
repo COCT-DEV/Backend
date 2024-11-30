@@ -1,8 +1,9 @@
 import { Prisma, User } from "@prisma/client";
 import prisma from "../prisma/client";
-import { UpdatePassword, UserUpdateData } from "../types/userTypes";
+import { UpdatePasswordData, UserUpdateData } from "../types/userTypes";
 import { ServiceErrorCode, UserServiceError } from "../utils/errors/ServiceErrors";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { hashPassword } from "../utils/hashers";
 
 
 type CreateUserInput = Omit<Prisma.UserCreateInput, 'createdAt' | 'role'>;
@@ -123,8 +124,21 @@ export const UpdateUserData = async (data: UserUpdateData) => {
 }
 
 
-// export const UpdateUserPassword = async (data: UpdatePassword) => {
-
-// }
+export const UpdateUserPassword = async (data: UpdatePasswordData) => {
+    try {
+        const updatedUser = await prisma.user.update({
+            where: {
+                email: data.email
+            }, 
+            data: {
+                password: await hashPassword(data.password)
+            }
+        })
+        return updatedUser;
+    }
+    catch (err) {
+        throw new UserServiceError("A unexpected error occurred", ServiceErrorCode.DATABASE_ERROR, 500)
+    }
+}
 
 export { UserServiceError };

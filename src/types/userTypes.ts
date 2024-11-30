@@ -27,15 +27,20 @@ export type UserUpdateData = {
     phoneNumber?: string;
     churchOfUser?: string;   
 }
-
+//FIXME: These are shitty clean them up
 export type UserIdOnly = {
     UserId: string;
 }
+export type UserEmailOnly = {
+    email: string
+}
 export type VerifyBody = {
-    UserId: string,
+    email: string,
     code: string
 }
-export type UpdatePassword = {
-    password: string,
-    confirm_password: string
+export type UpdatePasswordData = {
+    email: string,
+    code: string, // the OTP sent to user
+    password: string;
+    confirm_password: string;
 }

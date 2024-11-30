@@ -28,7 +28,7 @@ export const generateOTP = async (userId: string, email: string,type:OtpType) =>
                 otpType:type
             }
         })
-        sendMail(email, token, 'SignUpOTP')
+        sendMail(email, token, type);
     } catch (err) {
         if (err instanceof PrismaClientKnownRequestError) {
             if (err.code === 'P2002') {

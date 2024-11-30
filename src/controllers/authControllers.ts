@@ -1,8 +1,8 @@
 import { Request, Response } from "express"
-import { createUser, DeleteUserData, FindUser, FindUserById, UpdateUserData, UserServiceError } from "../services/userServices";
+import { createUser, DeleteUserData, FindUser, FindUserById, UpdateUserData, UpdateUserPassword, UserServiceError } from "../services/userServices";
 import { minimalResponse } from "../utils/userUtils/userResponses";
-import { UserIdOnly, UserLoginData, UserRegistrationData, UserUpdateData, VerifyBody } from "../types/userTypes";
-import { validateLoginData, validateRegistrationData, validateUpdateData } from "../utils/userUtils/validate";
+import { UpdatePasswordData, UserEmailOnly, UserIdOnly, UserLoginData, UserRegistrationData, UserUpdateData, VerifyBody } from "../types/userTypes";
+import { validateLoginData, validateRegistrationData, validateUpdateData, validateUpdatePassword } from "../utils/userUtils/validate";
 import { comparePassword, hashPassword } from "../utils/hashers";
 import tokenService from "../utils/jwt";
 import { error } from "console";
@@ -57,9 +57,9 @@ export const LoginUser = async (req: Request, res: Response): Promise<any> => {
     try {
         const validatedUser = await FindUser(user.email);
         const isValid = await comparePassword(user.password, validatedUser!.password);
-        if (!validatedUser.isVerified){
+        if (!validatedUser.isVerified) {
             return res.status(403).json({
-                "message":"Verify account to login"
+                "message": "Verify account to login"
             })
         }
         if (isValid && validatedUser?.password) {
@@ -160,23 +160,21 @@ export const DeleteUser = async (req: Request, res: Response): Promise<any> => {
 
 
 export const VerifyUser = async (req: Request, res: Response): Promise<any> => {
-    const { UserId, code } = req.body as VerifyBody;
+    const { email, code } = req.body as VerifyBody;
 
-    if (!UserId || !code) {
+    if (!email || !code) {
         return res.status(400).json({ error: "Invalid credentials" })
     }
-    if (typeof(code) !== 'string') {
-        return res.status(400).json({ error: "OTP code must be string" }) 
+    if (typeof (code) !== 'string') {
+        return res.status(400).json({ error: "OTP code must be string" })
     }
     try {
-        const isVerified = await verifyOTP(UserId, code, 'SignUpOTP');
+        const user = await FindUser(email);
+        const isVerified = await verifyOTP(user.id, code, 'SignUpOTP');
         if (isVerified) {
-            const user = await FindUserById(UserId);
-            if (user) {
-                return res.status(201).json({
-                    user: minimalResponse(user)
-                })
-            }
+            return res.status(201).json({
+                user: minimalResponse(user)
+            })
         }
 
     } catch (err) {
@@ -189,21 +187,69 @@ export const VerifyUser = async (req: Request, res: Response): Promise<any> => {
     }
 }
 
-export const newOtp = async (req: Request, res: Response): Promise<any> => {
-    const { UserId } = req.body as UserIdOnly;
-     if (!UserId) {
-        return res.status(400).json({'error':"User Id is required"});
-     }
-     try {
-        const user = await FindUserById(UserId);
-        if (user){
-            await generateOTP(user?.id, user.email,'SignUpOTP');
+export const newVerifyOtp = async (req: Request, res: Response): Promise<any> => {
+    const { email } = req.body as UserEmailOnly;
+    if (!email) {
+        return res.status(400).json({ 'error': "Email is required" });
+    }
+    try {
+        const user = await FindUser(email);
+        if (user) {
+            await generateOTP(user?.id, user.email, 'SignUpOTP');
             return res.status(200).json(
-                {message: 'A new otp has been sent'}
+                { message: 'A new otp has been sent' }
             )
         }
-     }
-     catch (err) {
+    }
+    catch (err) {
+        if (err instanceof OtpServiceError) {
+            return res.status(err.errCode).json({ error: err.message })
+        }
+        else {
+            return res.status(500).json({ error: "An unexpected error occurred" })
+        }
+    }
+}
+
+export const passwordUpdateOTP = async (req: Request, res: Response): Promise<any> => {
+    const { email } = req.body as UserEmailOnly;
+    if (!email) {
+        return res.status(400).json({ 'error': "Email is required" });
+    }
+    try {
+        const user = await FindUser(email);
+        if (user) {
+            await generateOTP(user?.id, user.email, 'PasswordOTP');
+            return res.status(200).json(
+                { message: 'A  reset otp has been sent' }
+            )
+        }
+    }
+    catch (err) {
+        if (err instanceof OtpServiceError) {
+            return res.status(err.errCode).json({ error: err.message })
+        }
+        else {
+            return res.status(500).json({ error: "An unexpected error occurred" })
+        }
+    }
+}
+
+
+export const ResetPassword = async (req: Request, res:Response): Promise<any> => {
+    const data = req.body as UpdatePasswordData;
+    const validated = validateUpdatePassword(data);
+    if (!validated.isValid) {
+        return res.status(400).json({ error: validated.error })
+    } 
+    try {
+        const user = await FindUser(data.email)
+        const result = await verifyOTP(user.id, data.code, 'PasswordOTP');
+        if (result) {
+            await UpdateUserPassword(data);
+            return res.sendStatus(204);
+        }
+    } catch (err) {
         if (err instanceof OtpServiceError) {
             return res.status(err.errCode).json({ error: err.message })
         }
