@@ -19,15 +19,15 @@ export const listTitles = async (version: Version) => {
             },
             where : {
                 version:version
+            }, 
+            orderBy: {
+                hymn: {
+                    hymn_number: 'asc'
+                }
             }
         })
-        const sortedTitles = titles.sort((a, b) => {
-            const hymnNumberA = parseFloat(a.hymn.hymn_number);
-            const hymnNumberB = parseFloat(b.hymn.hymn_number);
-            return hymnNumberA - hymnNumberB;
-        });
         
-        return sortedTitles;
+        return titles;
     } catch (err) {
         if (err instanceof PrismaClientValidationError) {
             throw new HymnServiceError("Invalid version(twi or english", 'NOT_FOUND')

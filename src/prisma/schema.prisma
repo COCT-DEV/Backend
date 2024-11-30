@@ -47,6 +47,7 @@ model User {
     roleRequestsReviewed RoleRequest[]    @relation("ReviewingUser")
 
     @@map("users")
+    Otp Otp?
 }
 
 model UserRoles {
@@ -151,7 +152,7 @@ model RoleRequest {
 }
 model Hymn {
   id           String        @id @default(uuid())
-  hymn_number  String
+  hymn_number  Int
   title        String
   lyrics       String
   versions     HymnVersion[]
@@ -167,4 +168,16 @@ model HymnVersion {
 enum Version {
   ENGLISH
   TWI
+}
+
+enum OtpType {
+    SignUpOTP
+    PasswordOTP
+}
+model Otp {
+        id  String   @id @default(uuid()) @db.Uuid @map("otp_id")
+        otpType OtpType @default(SignUpOTP)
+        code String @map("otp_code")
+        user User @relation(fields: [user_id], references: [id])
+        user_id String @unique @db.Uuid
 }

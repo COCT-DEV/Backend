@@ -11,7 +11,7 @@ async function insertHymns() {
         for (const hymnGroup of hymnGroups) {
             const title = hymnGroup.title
             const lyrics = hymnGroup.lyric
-            const hymn_number = hymnGroup.hymn_number.toString()
+            const hymn_number = hymnGroup.hymn_number
             const validVersion = ["TWI", "ENGLISH"].includes(hymnGroup.version.toUpperCase())
                 ? hymnGroup.version.toUpperCase()
                 : "TWI";

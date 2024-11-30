@@ -8,7 +8,7 @@ CREATE TYPE "RequestableRole" AS ENUM ('FACILITATOR', 'PREACHER');
 CREATE TYPE "Status" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
 -- CreateEnum
-CREATE TYPE "version" AS ENUM ('ENGLISH', 'TWi');
+CREATE TYPE "Version" AS ENUM ('ENGLISH', 'TWI');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -117,7 +117,7 @@ CREATE TABLE "role_requests" (
 
 -- CreateTable
 CREATE TABLE "Hymn" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "hymn_number" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "lyrics" TEXT NOT NULL,
@@ -127,15 +127,18 @@ CREATE TABLE "Hymn" (
 
 -- CreateTable
 CREATE TABLE "HymnVersion" (
-    "hymnVerId" SERIAL NOT NULL,
-    "hymn_id" INTEGER NOT NULL,
-    "hymn_version" "version" NOT NULL DEFAULT 'TWi',
+    "hymn_id" TEXT NOT NULL,
+    "id" TEXT NOT NULL,
+    "version" "Version" NOT NULL,
 
-    CONSTRAINT "HymnVersion_pkey" PRIMARY KEY ("hymnVerId")
+    CONSTRAINT "HymnVersion_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserRoles_role_name_key" ON "UserRoles"("role_name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "sermons_preacher_id_key" ON "sermons"("preacher_id");
@@ -153,16 +156,16 @@ ALTER TABLE "UserPermissions" ADD CONSTRAINT "UserPermissions_role_id_fkey" FORE
 ALTER TABLE "events" ADD CONSTRAINT "events_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "announcements" ADD CONSTRAINT "announcements_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "announcements" ADD CONSTRAINT "announcements_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events"("event_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "announcements" ADD CONSTRAINT "announcements_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_announcement_id_fkey" FOREIGN KEY ("announcement_id") REFERENCES "announcements"("announcement_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events"("event_id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -174,10 +177,10 @@ ALTER TABLE "sermons" ADD CONSTRAINT "sermons_preacher_id_fkey" FOREIGN KEY ("pr
 ALTER TABLE "study_guides" ADD CONSTRAINT "study_guides_facilitator_id_fkey" FOREIGN KEY ("facilitator_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "role_requests" ADD CONSTRAINT "role_requests_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "role_requests" ADD CONSTRAINT "role_requests_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "HymnVersion" ADD CONSTRAINT "HymnVersion_hymn_id_fkey" FOREIGN KEY ("hymn_id") REFERENCES "Hymn"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "role_requests" ADD CONSTRAINT "role_requests_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "HymnVersion" ADD CONSTRAINT "HymnVersion_hymn_id_fkey" FOREIGN KEY ("hymn_id") REFERENCES "Hymn"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
