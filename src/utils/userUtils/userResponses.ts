@@ -8,7 +8,7 @@ import { minimalUserResponse, UserUpdateData } from "../../types/userTypes";
  */
 export const minimalResponse = (user: User): minimalUserResponse  => {
     const data:minimalUserResponse = {
-        id: user.id,
+        userId: user.id,
         fullName: user.fullName,
         email: user.email,
         phoneNumber: user.phoneNumber,

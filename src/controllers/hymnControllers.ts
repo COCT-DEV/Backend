@@ -32,12 +32,7 @@ export const getHymns = async (req: Request, res: Response): Promise<any> => {
         })
     } catch (err) {
         if (err instanceof HymnServiceError) {
-            switch (err.code) {
-                case "NOT_FOUND":
-                    return res.status(404).json({ "error": err.message })
-                default:
-                    return res.status(500).json({ "error": "Internal Server Error" })
-            }
+                return res.status(200).json({error: err.message})
         }
         else {
             console.log(err);

@@ -5,7 +5,8 @@ const prisma = new PrismaClient({
       db: {
         url: process.env.DATABASE_URL
       }
-    }
+    },
+    log: ['query', 'info', 'warn', 'error'],
 })
 
 export default prisma;

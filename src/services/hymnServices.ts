@@ -1,7 +1,7 @@
 import { Version } from "@prisma/client";
 import prisma from "../prisma/client"
 import { PrismaClientValidationError } from "@prisma/client/runtime/library";
-import { HymnServiceError } from "../utils/errors/ServiceErrors";
+import { HymnServiceError, ServiceErrorCode } from "../utils/errors/ServiceErrors";
 
 
 
@@ -30,10 +30,10 @@ export const listTitles = async (version: Version) => {
         return titles;
     } catch (err) {
         if (err instanceof PrismaClientValidationError) {
-            throw new HymnServiceError("Invalid version(twi or english", 'NOT_FOUND')
+            throw new HymnServiceError("Invalid version(twi or english", ServiceErrorCode.HYMN_NOT_FOUND, 409)
         }
         else {
-            throw new HymnServiceError("An unexpected error occurred", "DATABASE_ERROR");
+            throw new HymnServiceError("An unexpected error occurred", ServiceErrorCode.DATABASE_ERROR, 500);
         }
     }
 }
@@ -47,14 +47,14 @@ export const getHymnal = async (hymnId: string) => {
             }
         });
         if (hymn === null) {
-            throw new HymnServiceError("Hymn not found", "NOT_FOUND")
+            throw new HymnServiceError("Hymn not found", ServiceErrorCode.HYMN_NOT_FOUND, 404)
         }
         return hymn
     } catch (err) {
         if (err instanceof HymnServiceError) {
             throw err
         } else {
-            throw new HymnServiceError("An unexpected error occurred", "DATABASE_ERROR");
+            throw new HymnServiceError("An unexpected error occurred", ServiceErrorCode.DATABASE_ERROR, 500);
         }
     }
 }

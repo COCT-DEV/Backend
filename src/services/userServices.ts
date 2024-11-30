@@ -1,46 +1,39 @@
 import { Prisma, User } from "@prisma/client";
 import prisma from "../prisma/client";
-import { UserRegistrationData, UserUpdateData } from "../types/userTypes";
-import { UserServiceError } from "../utils/errors/ServiceErrors";
-import { PrismaClientInitializationError, PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { UpdatePassword, UserUpdateData } from "../types/userTypes";
+import { ServiceErrorCode, UserServiceError } from "../utils/errors/ServiceErrors";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 
 type CreateUserInput = Omit<Prisma.UserCreateInput, 'createdAt' | 'role'>;
 
 export const createUser = async (data: CreateUserInput) => {
     try {
-        let memberRole = await prisma.userRoles.findFirst({
-            where: {name: "MEMBER"}
+        const memberRole = await prisma.userRoles.upsert({
+            where: { name: "MEMBER" },
+            update: {},
+            create: { name: "MEMBER" }
         });
-        if (!memberRole) {
-            prisma.userRoles.create({
-                data: {
-                    name: "MEMBER"
-                }
-            })
-        }
+
         const user = await prisma.user.create({
             data: {
                 ...data,
                 role: {
-                    connect: { id: memberRole?.id } 
+                    connect: { id: memberRole.id }
                 }
             }
-        })
+        });
         return user;
+
     } catch (e) {
-        console.log(e);
+        console.error(e);
         if (e instanceof Prisma.PrismaClientKnownRequestError) {
             if (e.code === 'P2002') {
-                throw new UserServiceError("User with this email already exists", "DUPLICATE_EMAIL")
+                throw new UserServiceError("User with this email already exists", ServiceErrorCode.DUPLICATE_EMAIL, 409)
             }
-            else {
-                throw new UserServiceError('An unexpected error occurred', "DATABASE_ERROR");
-            }
+            throw new UserServiceError('An unexpected error occurred', ServiceErrorCode.DATABASE_ERROR, 500);
         }
-        else {
-            console.log(`creation Error: ${e}`)
-        }
+        throw new UserServiceError('An unexpected error occurred', ServiceErrorCode.DATABASE_ERROR, 500);
     }
 }
 
@@ -55,42 +48,41 @@ export const FindUser = async (email: string) => {
             }
         })
         if (user === null) {
-            throw new UserServiceError("User does not exist", "NOT_FOUND");
+            throw new UserServiceError("User does not exist", ServiceErrorCode.USER_NOT_FOUND, 409);
         }
         return user;
     }
     catch (err) {
         console.log(err)
         if (err instanceof UserServiceError) {
-            throw new UserServiceError(err.message, err.code);
+            throw new UserServiceError(err.message, err.code, 500);
         }
-        throw new UserServiceError("An unexpected error occurred", 'DATABASE_ERROR');
+        throw new UserServiceError("An unexpected error occurred", ServiceErrorCode.DATABASE_ERROR, 500);
     }
 }
 
 export const FindUserById = async (id: string) => {
     if (!id) {
-        throw new UserServiceError("User ID is required", 'INVALID_DETAILS');
+        throw new UserServiceError("User ID is required", ServiceErrorCode.USER_INVALID_DETAILS, 400);
     }
     try {
         const user = await prisma.user.findUnique({
             where: { id }
         });
-        
         if (!user) {
-            throw new UserServiceError("User not found", "NOT_FOUND");
+            throw new UserServiceError("User not found", ServiceErrorCode.HYMN_NOT_FOUND, 409);
         }
         return user;
     } catch (err) {
         if (err instanceof PrismaClientKnownRequestError) {
             if (err.code === 'P2023') {
-                throw new UserServiceError("User ID is invalid", 'INVALID_DETAILS')
+                throw new UserServiceError("User ID is invalid", ServiceErrorCode.USER_INVALID_DETAILS, 409)
             }
         }
         else if (err instanceof UserServiceError) {
-            throw new UserServiceError(err.message, err.code);
+            throw new UserServiceError(err.message, err.code, 500);
         } else {
-            throw new UserServiceError("An unexpected error occurred", 'DATABASE_ERROR');
+            throw new UserServiceError("An unexpected error occurred", ServiceErrorCode.DATABASE_ERROR, 500);
         }
     }
 }
@@ -103,13 +95,13 @@ export const DeleteUserData = async (id: string) => {
     } catch(err) {
         if (err instanceof PrismaClientKnownRequestError) {
             if (err.code === "P2002") {
-                throw  new UserServiceError('User Account could not be deleted', 'NOT_FOUND')
+                throw  new UserServiceError('User Account could not be deleted', ServiceErrorCode.USER_NOT_FOUND, 409)
             } else {
-                throw new UserServiceError('A unexpected error occurred', 'DATABASE_ERROR')
+                throw new UserServiceError('A unexpected error occurred', ServiceErrorCode.DATABASE_ERROR, 500)
             }
         } else {
             console.log(err);
-            throw new UserServiceError("An unexpected error occurred", 'DATABASE_ERROR')
+            throw new UserServiceError("An unexpected error occurred", ServiceErrorCode.DATABASE_ERROR, 500)
         }
     }
 }
@@ -118,7 +110,7 @@ export const UpdateUserData = async (data: UserUpdateData) => {
     try {
         const updatedUser = await prisma.user.update({
             where: {
-                id: data.id
+                id: data.UserId
             },
             data: {
                 ...data
@@ -126,8 +118,13 @@ export const UpdateUserData = async (data: UserUpdateData) => {
         })
         return updatedUser;
     } catch (err) {
-        throw new UserServiceError("A unexpected error occurred", 'DATABASE_ERROR')
+        throw new UserServiceError("A unexpected error occurred", ServiceErrorCode.DATABASE_ERROR, 500)
     }
 }
+
+
+// export const UpdateUserPassword = async (data: UpdatePassword) => {
+
+// }
 
 export { UserServiceError };

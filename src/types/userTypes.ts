@@ -12,7 +12,7 @@ export type UserLoginData = {
     password: string
 }
 export type minimalUserResponse = {
-    id: string;
+    userId: string;
     fullName: string;
     email: string;
     phoneNumber: string;
@@ -21,13 +21,21 @@ export type minimalUserResponse = {
 }
 
 export type UserUpdateData = {
-    id: string;
+    UserId: string;
     fullName?: string;
     email?: string;
     phoneNumber?: string;
     churchOfUser?: string;   
 }
 
-export type DeleteData = {
+export type UserIdOnly = {
     UserId: string;
+}
+export type VerifyBody = {
+    UserId: string,
+    code: string
+}
+export type UpdatePassword = {
+    password: string,
+    confirm_password: string
 }

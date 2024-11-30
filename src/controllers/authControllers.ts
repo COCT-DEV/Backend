@@ -1,15 +1,18 @@
 import { Request, Response } from "express"
 import { createUser, DeleteUserData, FindUser, FindUserById, UpdateUserData, UserServiceError } from "../services/userServices";
 import { minimalResponse } from "../utils/userUtils/userResponses";
-import { DeleteData, UserLoginData, UserRegistrationData, UserUpdateData } from "../types/userTypes";
+import { UserIdOnly, UserLoginData, UserRegistrationData, UserUpdateData, VerifyBody } from "../types/userTypes";
 import { validateLoginData, validateRegistrationData, validateUpdateData } from "../utils/userUtils/validate";
 import { comparePassword, hashPassword } from "../utils/hashers";
 import tokenService from "../utils/jwt";
 import { error } from "console";
 import e from "cors";
+import { OtpServiceError, ServiceErrorCode } from "../utils/errors/ServiceErrors";
+import { generateOTP, verifyOTP } from "../services/otpService";
 
 //TODO: consider using middleware for error handling
 //TODO: store refresh token as cookie in http response
+//TODO: Clean try catch feels a bit redundant
 
 export const RegisterUser = async (req: Request, res: Response): Promise<any> => {
     const reqData = req.body as UserRegistrationData;
@@ -26,29 +29,21 @@ export const RegisterUser = async (req: Request, res: Response): Promise<any> =>
         const newUser = await createUser(UserData);
 
         if (newUser) {
-            const tokens = tokenService.generateTokens({ userId: newUser?.id, fullName: newUser?.fullName })
-            res.cookie('refreshToken', tokens.refreshToken, {
-                httpOnly: true,
-                sameSite: 'strict',
-                maxAge: 7 * 24 * 60 * 60 * 1000,
-                path: '/api/auth/create'
-            });
-            return res.status(200).json(
-                {
-                    token: tokens.accessToken,
-                    user: minimalResponse(newUser),
-                }
-            )
+            await generateOTP(newUser.id, newUser.email, 'SignUpOTP');
+            return res.status(200).json({
+                message: 'An otp message has been sent to your mail',
+                userId: newUser?.id
+            })
         }
     }
     catch (e) {
         if (e instanceof UserServiceError) {
-            switch (e.code) {
-                case "DUPLICATE_EMAIL":
-                    return res.status(409).json({ "error": e.message })
-                default:
-                    return res.status(500).json({ "error": "Internal Server Error" })
-            }
+            return res.status(e.errCode).json({ error: e.message })
+        }
+        else if (e instanceof OtpServiceError) {
+            return res.status(e.errCode).json({ error: e.message })
+        } else {
+            return res.status(500).json({ "error": "Internal Server Error" })
         }
     }
 }
@@ -62,20 +57,24 @@ export const LoginUser = async (req: Request, res: Response): Promise<any> => {
     try {
         const validatedUser = await FindUser(user.email);
         const isValid = await comparePassword(user.password, validatedUser!.password);
-        
+        if (!validatedUser.isVerified){
+            return res.status(403).json({
+                "message":"Verify account to login"
+            })
+        }
         if (isValid && validatedUser?.password) {
-            const tokens = tokenService.generateTokens({userId: validatedUser.id, fullName: validatedUser.fullName});
+            const tokens = tokenService.generateTokens({ userId: validatedUser.id, fullName: validatedUser.fullName });
             res.cookie('refreshToken', tokens.refreshToken, {
                 httpOnly: true,
                 secure: true,
                 sameSite: 'strict',
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
-    
+
             return res.status(200).json(
-                { 
+                {
                     token: tokens.accessToken,
-                    user:  minimalResponse(validatedUser)
+                    user: minimalResponse(validatedUser)
                 }
             )
         } else {
@@ -83,9 +82,8 @@ export const LoginUser = async (req: Request, res: Response): Promise<any> => {
         }
     }
     catch (e) {
-        console.log(e);
-        if (e instanceof UserServiceError && e.code === "NOT_FOUND") {
-            return res.status(400).json({ error: "Invalid credentials" })
+        if (e instanceof UserServiceError) {
+            return res.status(e.errCode).json({ error: e.message })
         }
         else {
             return res.status(500).json({ error: "An unexpected error occurred" });
@@ -93,85 +91,124 @@ export const LoginUser = async (req: Request, res: Response): Promise<any> => {
     }
 }
 
-export const RefreshToken = async (req:Request, res: Response): Promise<any>=> {
+export const RefreshToken = async (req: Request, res: Response): Promise<any> => {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
         return res.status(401).json({ error: 'Refresh token not found' });
     }
     try {
         const accessToken = tokenService.refreshAccessToken(refreshToken);
-        return res.status(200).send({accessToken})
-    } catch(err) {
+        return res.status(200).send({ accessToken })
+    } catch (err) {
         console.log(err);
-        return res.status(500).send({error : "Access token could not be generated"});
+        return res.status(500).send({ error: "Access token could not be generated" });
     }
 }
 
 
-export const UpdateUser = async(req: Request, res: Response): Promise<any> => {
+export const UpdateUser = async (req: Request, res: Response): Promise<any> => {
     const userData = req.body as UserUpdateData;
     const validated = validateUpdateData(userData);
 
     if (!validated.isValid) {
-        return res.status(400).json({error: validated.error})
+        return res.status(400).json({ error: validated.error })
     }
 
     try {
-        const foundUser = await FindUserById(userData.id);
+        const foundUser = await FindUserById(userData.UserId);
         if (foundUser) {
             const updatedUser = minimalResponse(await UpdateUserData(userData));
             return res.status(202).json({
                 user: updatedUser
             })
         } else {
-            throw new UserServiceError("User not found", "NOT_FOUND");
+            throw new UserServiceError("User not found", ServiceErrorCode.USER_NOT_FOUND, 409);
         }
     } catch (err) {
         if (err instanceof UserServiceError) {
-            switch (err.code) {
-                case "INVALID_DETAILS":
-                    return res.status(409).json({ "error": err.message })
-                case "NOT_FOUND":
-                    return res.status(409).json({ "error": err.message })
-                default:
-                    return res.status(500).json({ "error": "Internal Server Error" })
-            }
+            return res.status(err.errCode).json({ "error": err.message })
         } else {
-            console.error("Unexpected error:", err);
             return res.status(500).json({ error: "Internal Server Error" });
         }
     }
 }
 
 
-export const DeleteUser = async(req: Request, res: Response): Promise<any> => {
-    const {UserId} = req.body as DeleteData;
+export const DeleteUser = async (req: Request, res: Response): Promise<any> => {
+    const { UserId } = req.body as UserIdOnly;
 
     if (!UserId) {
-        return res.status(400).json({error: "User id is required"})
+        return res.status(400).json({ error: "User id is required" })
     }
 
     try {
-        const foundUser = await FindUserById(UserId);       
+        const foundUser = await FindUserById(UserId);
         if (foundUser) {
             await DeleteUserData(UserId);
             return res.sendStatus(204);
         } else {
-            throw new UserServiceError("User not found", "NOT_FOUND");
+            throw new UserServiceError("User not found", ServiceErrorCode.USER_NOT_FOUND, 409);
         }
     } catch (err) {
         if (err instanceof UserServiceError) {
-            switch (err.code) {
-                case "INVALID_DETAILS":
-                    return res.status(409).json({ "error": err.message })
-                case "NOT_FOUND":
-                    return res.status(404).json({ "error": err.message })
-                default:
-                    return res.status(500).json({ "error": "Internal Server Error" })
-            }
+            return res.status(err.errCode).json({ error: err.message })
         } else {
-            console.error("Unexpected error:", err);
             return res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
+}
+
+
+export const VerifyUser = async (req: Request, res: Response): Promise<any> => {
+    const { UserId, code } = req.body as VerifyBody;
+
+    if (!UserId || !code) {
+        return res.status(400).json({ error: "Invalid credentials" })
+    }
+    if (typeof(code) !== 'string') {
+        return res.status(400).json({ error: "OTP code must be string" }) 
+    }
+    try {
+        const isVerified = await verifyOTP(UserId, code, 'SignUpOTP');
+        if (isVerified) {
+            const user = await FindUserById(UserId);
+            if (user) {
+                return res.status(201).json({
+                    user: minimalResponse(user)
+                })
+            }
+        }
+
+    } catch (err) {
+        if (err instanceof OtpServiceError) {
+            return res.status(err.errCode).json({ error: err.message })
+        }
+        else {
+            return res.status(500).json({ error: "An unexpected error occurred" })
+        }
+    }
+}
+
+export const newOtp = async (req: Request, res: Response): Promise<any> => {
+    const { UserId } = req.body as UserIdOnly;
+     if (!UserId) {
+        return res.status(400).json({'error':"User Id is required"});
+     }
+     try {
+        const user = await FindUserById(UserId);
+        if (user){
+            await generateOTP(user?.id, user.email,'SignUpOTP');
+            return res.status(200).json(
+                {message: 'A new otp has been sent'}
+            )
+        }
+     }
+     catch (err) {
+        if (err instanceof OtpServiceError) {
+            return res.status(err.errCode).json({ error: err.message })
+        }
+        else {
+            return res.status(500).json({ error: "An unexpected error occurred" })
         }
     }
 }
