@@ -21,12 +21,13 @@ export type minimalUserResponse = {
 }
 
 export type UserUpdateData = {
-    UserId: string;
+    userId: string;
     fullName?: string;
     email?: string;
     phoneNumber?: string;
     churchOfUser?: string;   
 }
+
 //FIXME: These are shitty clean them up
 export type UserIdOnly = {
     UserId: string;

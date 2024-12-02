@@ -109,12 +109,13 @@ export const DeleteUserData = async (id: string) => {
 
 export const UpdateUserData = async (data: UserUpdateData) => {
     try {
+        let {['userId']:_, ...result} = data
         const updatedUser = await prisma.user.update({
             where: {
-                id: data.UserId
+                id: data.userId
             },
             data: {
-                ...data
+                ...result
             }
         })
         return updatedUser;

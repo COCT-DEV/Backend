@@ -115,7 +115,7 @@ export const UpdateUser = async (req: Request, res: Response): Promise<any> => {
     }
 
     try {
-        const foundUser = await FindUserById(userData.UserId);
+        const foundUser = await FindUserById(userData.userId);
         if (foundUser) {
             const updatedUser = minimalResponse(await UpdateUserData(userData));
             return res.status(202).json({

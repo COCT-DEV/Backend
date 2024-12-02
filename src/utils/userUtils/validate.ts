@@ -71,7 +71,7 @@ export const validateLoginData = (userInfo: UserLoginData): { isValid: boolean; 
 export const validateUpdateData = (
 	userInfo: UserUpdateData
 ): { isValid: boolean; error?: string } => {
-	const requiredFields: (keyof UserUpdateData)[] = ["UserId"];
+	const requiredFields: (keyof UserUpdateData)[] = ["userId"];
 
 
 	for (let field of requiredFields) {
