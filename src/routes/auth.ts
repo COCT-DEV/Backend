@@ -1,5 +1,5 @@
 import { Router } from "express"
-import {DeleteUser, LoginUser, newVerifyOtp, passwordUpdateOTP, RefreshToken, RegisterUser, ResetPassword, UpdateUser, VerifyUser } from "../controllers/authControllers"
+import {ChangePassword, DeleteUser, LoginUser, newVerifyOtp, passwordUpdateOTP, RefreshToken, RegisterUser, ResetPassword, UpdateUser, VerifyUser } from "../controllers/authControllers"
 import { authenticateToken } from "../middlewares/useAuth";
 
 const authRouter = Router()
@@ -13,6 +13,7 @@ authRouter.post("/new-otp", newVerifyOtp)
 authRouter.put("/update", authenticateToken, UpdateUser);
 authRouter.delete("/delete", authenticateToken, DeleteUser);
 authRouter.post("/password-otp", authenticateToken, passwordUpdateOTP);
-authRouter.post("/reset-password", authenticateToken, ResetPassword);
+authRouter.post("/reset-password", ResetPassword);
+authRouter.post("/change-password", authenticateToken,ChangePassword );
 
 export default authRouter;

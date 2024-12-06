@@ -23,13 +23,14 @@ async function insertHymns() {
                     title,
                     lyrics
                 }
-            })
+            });
+
             await prisma.hymnVersion.create({
                     data: {
                         hymn_id: hymn.id,
                         version: validVersion as Version
                     }
-                })
+                });
         }
     } catch (err) {
         console.log(err);

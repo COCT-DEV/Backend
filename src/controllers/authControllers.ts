@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
-import { createUser, DeleteUserData, FindUser, FindUserById, UpdateUserData, UpdateUserPassword, UserServiceError } from "../services/userServices";
+import { ChangeUserPassword, createUser, DeleteUserData, FindUser, FindUserById, UpdateUserData, UpdateUserPassword, UserServiceError } from "../services/userServices";
 import { minimalResponse } from "../utils/userUtils/userResponses";
-import { UpdatePasswordData, UserEmailOnly, UserIdOnly, UserLoginData, UserRegistrationData, UserUpdateData, VerifyBody } from "../types/userTypes";
+import { ChangePasswordData, UpdatePasswordData, UserEmailOnly, UserIdOnly, UserLoginData, UserRegistrationData, UserUpdateData, VerifyBody } from "../types/userTypes";
 import { validateLoginData, validateRegistrationData, validateUpdateData, validateUpdatePassword } from "../utils/userUtils/validate";
 import { comparePassword, hashPassword } from "../utils/hashers";
 import tokenService from "../utils/jwt";
@@ -13,6 +13,7 @@ import { generateOTP, verifyOTP } from "../services/otpService";
 //TODO: consider using middleware for error handling
 //TODO: store refresh token as cookie in http response
 //TODO: Clean try catch feels a bit redundant
+//TODO; Clean up the asking for ids feel like there is a better way
 
 export const RegisterUser = async (req: Request, res: Response): Promise<any> => {
     const reqData = req.body as UserRegistrationData;
@@ -256,5 +257,30 @@ export const ResetPassword = async (req: Request, res:Response): Promise<any> =>
         else {
             return res.status(500).json({ error: "An unexpected error occurred" })
         }
+    }
+}
+
+//FIX: heck userId in payload rather
+export const ChangePassword = async (req:Request, res:Response): Promise<any> => {
+    const data = await req.body as ChangePasswordData;
+    if (!data.password && !data.confirm_password) {
+        return res.status(400).json({error: "Password and confirm password are required"});
+    };
+
+    if (!data.UserId) {
+        return res.status(400).json({error:"User Id is required"});
+    }
+    if (data.password !== data.confirm_password) {
+        return res.status(400).json({error: "Passwords must match"});
+    };
+    try {
+        ChangeUserPassword(data);
+        return res.sendStatus(204);
+    } catch (err) {
+        if (err instanceof UserServiceError)
+        {
+            return res.status(err.errCode).json({error: err.message})
+        }
+        return res.status(400).json({"error": "An unexpected error occurred"})
     }
 }

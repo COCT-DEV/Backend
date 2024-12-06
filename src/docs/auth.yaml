@@ -569,6 +569,74 @@ paths:
         500:
           $ref: '#/components/responses/ServerError'
 
+  /api/auth/change-password:
+    post:
+      summary: Change user password
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      description: Change the password of the authenticated user.
+      requestBody:
+        description: Password change data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - UserId
+                - password
+                - confirm_password
+              properties:
+                UserId:
+                  type: string
+                  description: ID of the user whose password is being changed
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+                password:
+                  type: string
+                  format: password
+                  description: New password for the user
+                  example: "newPassword123"
+                confirm_password:
+                  type: string
+                  format: password
+                  description: Confirmation of the new password
+                  example: "newPassword123"
+      responses:
+        204:
+          description: Password changed successfully
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Passwords must match"  # or "User Id is required"
+        401:
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No token, authorization denied"
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "An unexpected error occurred"
+
 components:
   securitySchemes:
     BearerAuth:

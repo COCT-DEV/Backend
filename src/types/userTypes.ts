@@ -45,3 +45,8 @@ export type UpdatePasswordData = {
     password: string;
     confirm_password: string;
 }
+export type ChangePasswordData = {
+    UserId: string; 
+    password: string;
+    confirm_password: string;
+}
