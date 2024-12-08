@@ -4,7 +4,15 @@ paths:
       summary: List all locations
       tags:
         - Locations
-      description: Retrieve a list of all available locations.
+      description: Retrieve a list of all available locations with pagination support.
+      parameters:
+        - in: query
+          name: page
+          required: false
+          description: The page number to retrieve.
+          schema:
+            type: integer
+            example: 1
       responses:
         200:
           description: Successfully retrieved locations
@@ -30,6 +38,10 @@ paths:
                         address:
                           type: string
                           description: Address of the location
+                  next:
+                    type: string
+                    description: URL for the next page of results
+                    example: "http://localhost:3000/api/locations?page=2"
         400:
           description: Location not found
           content:

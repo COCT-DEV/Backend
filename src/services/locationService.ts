@@ -2,13 +2,30 @@ import prisma from "../prisma/client";
 import {ServiceError, ServiceErrorCode} from "../utils/errors/ServiceErrors";
 import church from "../routes/church";
 
-export const listLocations = async (): Promise<any> => {
+export const listLocations = async (page: number): Promise<any> => {
     try {
-        const locations = await prisma.churchLocations.findMany();
+        const count = await  prisma.churchLocations.count();
+        if (page*10 > count) {
+            throw new ServiceError("MAX LIMIT EXCEEDED",ServiceErrorCode.LIMIT_EXCEEDED ,416)
+        }
+        console.log(page)
+        const skip = page*10 > 10?  (page*10)-10 : 0;
+        const locations = await prisma.churchLocations.findMany(
+            {
+                take:10*page,
+                skip: skip
+            }
+        );
+
         return  locations;
     } catch (error) {
         if (error instanceof ServiceError) {
-            throw new ServiceError(error.message,ServiceErrorCode.LOCATION_NOT_FOUND ,500)
+            switch (error.code) {
+                case ServiceErrorCode.LOCATION_NOT_FOUND:
+                    throw new ServiceError(error.message, ServiceErrorCode.LOCATION_NOT_FOUND, 500)
+                case ServiceErrorCode.LIMIT_EXCEEDED:
+                    throw new ServiceError("MAX LIMIT EXCEEDED", ServiceErrorCode.LIMIT_EXCEEDED, 416)
+            }
         } else {
             throw error;
         }

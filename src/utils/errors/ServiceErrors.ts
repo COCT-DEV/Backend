@@ -22,6 +22,8 @@ export enum ServiceErrorCode {
     //LOCATION errors
     LOCATION_NOT_FOUND = 'LOCATION_NOT_FOUND',
     NO_PARAM_ERROR = 'NO_PARAM_ERROR',
+
+    LIMIT_EXCEEDED = 'LIMIT_EXCEEDED',
 }
 
 export class ServiceError extends Error {

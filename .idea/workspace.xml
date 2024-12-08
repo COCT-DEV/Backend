@@ -5,8 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="762ed0bb-8b98-4e09-9ba1-03ee225a0df0" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/scripts/insertLocations.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/scripts/insertLocations.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/scripts/insertLocations.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/controllers/locationControllers.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/controllers/locationControllers.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/locationService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/locationService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/errors/ServiceErrors.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/errors/ServiceErrors.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -77,7 +79,8 @@
       <updated>1733366278301</updated>
       <workItem from="1733366279958" duration="104000" />
       <workItem from="1733663283811" duration="5407000" />
-      <workItem from="1733669991537" duration="1628000" />
+      <workItem from="1733669991537" duration="3102000" />
+      <workItem from="1733673552289" duration="692000" />
     </task>
     <servers />
   </component>

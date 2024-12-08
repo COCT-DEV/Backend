@@ -4,12 +4,18 @@ import {ServiceError, ServiceErrorCode} from "../utils/errors/ServiceErrors";
 
 
 export const ListLocation = async  (req: Request, res: Response): Promise<any> => {
+    let page: number = Number(req.query.page) || 0;
+
     try {
-        const locations = await listLocations();
+        const locations = await listLocations(page);
         return res.status(200).json(
-            {locations: locations}
+            {
+                locations: locations,
+                next: `${req.protocol}://${req.get('host')}/page=${page+1}`
+            }
         );
     } catch (err) {
+        console.log(err);
         if (err instanceof ServiceError && err.code === ServiceErrorCode.LOCATION_NOT_FOUND) {
             return res.status(400).json({error: "Location not found"})
         } else {
