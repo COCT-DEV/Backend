@@ -1,17 +1,29 @@
 import {Request, Response} from "express";
 import {listLocations, searchLocation} from "../services/locationService";
 import {ServiceError, ServiceErrorCode} from "../utils/errors/ServiceErrors";
+import prisma from "../prisma/client";
 
 
 export const ListLocation = async  (req: Request, res: Response): Promise<any> => {
     let page: number = Number(req.query.page) || 0;
-
+    let next:string | null;
     try {
+        const count = await  prisma.churchLocations.count();
+
+        if (page*80 > count ) {
+            next = null;
+            return res.status(416).json({ error: "Max limit exceeded" });
+        } else if ((page+1)*80 > count ) {
+            next = null;
+        }
+        else {
+            next = `${req.protocol}://${req.get('host')}/page=${page+1}`
+        }
         const locations = await listLocations(page);
         return res.status(200).json(
             {
                 locations: locations,
-                next: `${req.protocol}://${req.get('host')}/page=${page+1}`
+                next: next
             }
         );
     } catch (err) {

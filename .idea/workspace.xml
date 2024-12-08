@@ -8,7 +8,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/controllers/locationControllers.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/controllers/locationControllers.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/services/locationService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/locationService.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/errors/ServiceErrors.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/errors/ServiceErrors.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,6 +80,7 @@
       <workItem from="1733663283811" duration="5407000" />
       <workItem from="1733669991537" duration="3102000" />
       <workItem from="1733673552289" duration="692000" />
+      <workItem from="1733686142355" duration="1111000" />
     </task>
     <servers />
   </component>

@@ -4,15 +4,12 @@ import church from "../routes/church";
 
 export const listLocations = async (page: number): Promise<any> => {
     try {
-        const count = await  prisma.churchLocations.count();
-        if (page*10 > count) {
-            throw new ServiceError("MAX LIMIT EXCEEDED",ServiceErrorCode.LIMIT_EXCEEDED ,416)
-        }
-        console.log(page)
-        const skip = page*10 > 10?  (page*10)-10 : 0;
+
+
+        const skip = (page*80) > 80?  (page*80)-((page-1)*80) : 0;
         const locations = await prisma.churchLocations.findMany(
             {
-                take:10*page,
+                take:(page*10)+70,
                 skip: skip
             }
         );
