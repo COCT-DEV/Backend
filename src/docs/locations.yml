@@ -1,0 +1,111 @@
+paths:
+  /api/locations:
+    get:
+      summary: List all locations
+      tags:
+        - Locations
+      description: Retrieve a list of all available locations.
+      responses:
+        200:
+          description: Successfully retrieved locations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  locations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Unique identifier for the location
+                        name:
+                          type: string
+                          description: Name of the location
+                        city:
+                          type: string
+                          description: City where the location is situated
+                        address:
+                          type: string
+                          description: Address of the location
+        400:
+          description: Location not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Location not found"
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal Server Error"
+
+  /api/locations/search:
+    get:
+      summary: Search for locations
+      tags:
+        - Locations
+      description: Search for locations by city name.
+      parameters:
+        - in: query
+          name: location
+          required: true
+          description: The city name to search for locations.
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successfully retrieved matching locations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  locations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Unique identifier for the location
+                        name:
+                          type: string
+                          description: Name of the location
+                        city:
+                          type: string
+                          description: City where the location is situated
+                        address:
+                          type: string
+                          description: Address of the location
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Location is required"
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal Server Error"

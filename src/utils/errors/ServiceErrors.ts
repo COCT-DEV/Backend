@@ -17,7 +17,11 @@ export enum ServiceErrorCode {
     CONFIGURATION_ERROR = 'CONFIGURATION_ERROR',
     
     // Hymn-related error codes
-    HYMN_NOT_FOUND = 'HYMN_NOT_FOUND'
+    HYMN_NOT_FOUND = 'HYMN_NOT_FOUND',
+
+    //LOCATION errors
+    LOCATION_NOT_FOUND = 'LOCATION_NOT_FOUND',
+    NO_PARAM_ERROR = 'NO_PARAM_ERROR',
 }
 
 export class ServiceError extends Error {

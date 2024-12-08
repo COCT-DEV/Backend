@@ -1,186 +1,195 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider  = "postgresql"
-    url       = env("DATABASE_URL")
-    directUrl = env("DIRECT_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum AssignableRole {
-    USHER
-    CHOIR_MEMBER
-    TECHNICIAN
+  USHER
+  CHOIR_MEMBER
+  TECHNICIAN
 }
 
 enum RequestableRole {
-    FACILITATOR
-    PREACHER
+  FACILITATOR
+  PREACHER
 }
 
 enum Status {
-    PENDING
-    APPROVED
-    REJECTED
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model User {
-    id                  String    @id @default(uuid()) @db.Uuid
-    fullName            String    @map("full_name") @db.VarChar(100)
-    email               String    @unique @db.VarChar(1000)
-    password            String    @db.VarChar(255)
-    phoneNumber         String    @map("phone_number") @db.VarChar(15)
-    notificationEnabled Boolean   @default(true) @map("notification_enabled")
-    createdAt           DateTime  @default(now()) @map("created_at")
-    churchOfUser        String    @map("church_of_user")
-    isVerified          Boolean   @map("is_verified")@default(false)
-    role                UserRoles @relation(fields: [role_id], references: [id])
-    role_id             Int       @map("role_id")
+  id                  String    @id @default(uuid()) @db.Uuid
+  fullName            String    @map("full_name") @db.VarChar(100)
+  email               String    @unique @db.VarChar(1000)
+  password            String    @db.VarChar(255)
+  phoneNumber         String    @map("phone_number") @db.VarChar(15)
+  notificationEnabled Boolean   @default(true) @map("notification_enabled")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  churchOfUser        String    @map("church_of_user")
+  isVerified          Boolean   @map("is_verified") @default(false)
+  role                UserRoles @relation(fields: [role_id], references: [id])
+  role_id             Int       @map("role_id")
 
-    // Relations
-    eventsPosted         Event[]
-    announcementsPosted  Announcement[]
-    assignedRoles        RoleAssignment[]
-    facilitatingGuides   StudyGuide[]
-    sermon               Sermon?
-    roleRequestsMade     RoleRequest[]    @relation("RequestingUser")
-    roleRequestsReviewed RoleRequest[]    @relation("ReviewingUser")
-    Otp                  Otp?
+  // Relations
+  eventsPosted         Event[]
+  announcementsPosted  Announcement[]
+  assignedRoles        RoleAssignment[]
+  facilitatingGuides   StudyGuide[]
+  sermon               Sermon?
+  roleRequestsMade     RoleRequest[]    @relation("RequestingUser")
+  roleRequestsReviewed RoleRequest[]    @relation("ReviewingUser")
+  Otp                  Otp?
 
-    @@map("users")
+  @@map("users")
 }
 
 model UserRoles {
-    id   Int    @id @default(autoincrement()) @map("role_id")
-    name String @unique @default("MEMBER") @map("role_name") @db.VarChar(50)
+  id   Int    @id @default(autoincrement()) @map("role_id")
+  name String @unique @default("MEMBER") @map("role_name") @db.VarChar(50)
 
-    UserPermissions UserPermissions[]
+  UserPermissions UserPermissions[]
 
-    User User[]
+  User User[]
 }
 
 model UserPermissions {
-    id      Int       @id @default(autoincrement()) @map("permission_id")
-    name    String    @default("CanWrite") @map("permission_name") @db.VarChar(50)
-    role    UserRoles @relation(fields: [role_id], references: [id])
-    role_id Int       @map("role_id")
+  id      Int       @id @default(autoincrement()) @map("permission_id")
+  name    String    @default("CanWrite") @map("permission_name") @db.VarChar(50)
+  role    UserRoles @relation(fields: [role_id], references: [id])
+  role_id Int       @map("role_id")
 }
 
 model Event {
-    id          String   @id @default(uuid()) @map("event_id") @db.Uuid
-    title       String   @db.VarChar(100)
-    description String
-    startTime   DateTime @map("start_time")
-    endTime     DateTime @map("end_time")
-    createdBy   User     @relation(fields: [userId], references: [id])
-    userId      String   @map("user_id") @db.Uuid
+  id          String   @id @default(uuid()) @map("event_id") @db.Uuid
+  title       String   @db.VarChar(100)
+  description String
+  startTime   DateTime @map("start_time")
+  endTime     DateTime @map("end_time")
+  createdBy   User     @relation(fields: [userId], references: [id])
+  userId      String   @map("user_id") @db.Uuid
 
-    // Relations
-    announcements   Announcement[]
-    roleAssignments RoleAssignment[]
+  // Relations
+  announcements   Announcement[]
+  roleAssignments RoleAssignment[]
 
-    @@map("events")
+  @@map("events")
 }
 
 model Announcement {
-    id        String  @id @default(uuid()) @map("announcement_id") @db.Uuid
-    title     String  @db.VarChar(100)
-    message   String  @db.VarChar(100)
-    createdBy User    @relation(fields: [userId], references: [id])
-    userId    String  @map("user_id") @db.Uuid
-    event     Event?  @relation(fields: [eventId], references: [id])
-    eventId   String? @map("event_id") @db.Uuid
+  id        String  @id @default(uuid()) @map("announcement_id") @db.Uuid
+  title     String  @db.VarChar(100)
+  message   String  @db.VarChar(100)
+  createdBy User    @relation(fields: [userId], references: [id])
+  userId    String  @map("user_id") @db.Uuid
+  event     Event?  @relation(fields: [eventId], references: [id])
+  eventId   String? @map("event_id") @db.Uuid
 
-    // Relations
-    roleAssignments RoleAssignment[]
+  // Relations
+  roleAssignments RoleAssignment[]
 
-    @@map("announcements")
+  @@map("announcements")
 }
 
 model RoleAssignment {
-    id             String       @id @default(uuid()) @map("assignment_id") @db.Uuid
-    createdBy      User         @relation(fields: [userId], references: [id])
-    userId         String       @map("created_by") @db.Uuid
-    announcement   Announcement @relation(fields: [announcementId], references: [id])
-    announcementId String       @map("announcement_id") @db.Uuid
-    weekStartDate  DateTime     @map("week_start_date")
-    event          Event        @relation(fields: [eventId], references: [id])
-    eventId        String       @map("event_id") @db.Uuid
-    createdAt      DateTime     @default(now()) @map("created_at")
+  id             String       @id @default(uuid()) @map("assignment_id") @db.Uuid
+  createdBy      User         @relation(fields: [userId], references: [id])
+  userId         String       @map("created_by") @db.Uuid
+  announcement   Announcement @relation(fields: [announcementId], references: [id])
+  announcementId String       @map("announcement_id") @db.Uuid
+  weekStartDate  DateTime     @map("week_start_date")
+  event          Event        @relation(fields: [eventId], references: [id])
+  eventId        String       @map("event_id") @db.Uuid
+  createdAt      DateTime     @default(now()) @map("created_at")
 
-    @@map("role_assignments")
+  @@map("role_assignments")
 }
 
 model Sermon {
-    id          String   @id @default(uuid()) @map("sermon_id") @db.Uuid
-    title       String   @db.VarChar(100)
-    preacher    User     @relation(fields: [preacherId], references: [id])
-    preacherId  String   @unique @map("preacher_id") @db.Uuid
-    date        DateTime
-    description String
-    audioUrl    String?  @map("audio_url")
-    videoUrl    String?  @map("video_url")
-    createdAt   DateTime @default(now()) @map("created_at")
+  id          String   @id @default(uuid()) @map("sermon_id") @db.Uuid
+  title       String   @db.VarChar(100)
+  preacher    User     @relation(fields: [preacherId], references: [id])
+  preacherId  String   @unique @map("preacher_id") @db.Uuid
+  date        DateTime
+  description String
+  audioUrl    String?  @map("audio_url")
+  videoUrl    String?  @map("video_url")
+  createdAt   DateTime @default(now()) @map("created_at")
 
-    @@map("sermons")
+  @@map("sermons")
 }
 
 model StudyGuide {
-    id            String   @id @default(uuid()) @map("guide_id") @db.Uuid
-    title         String   @db.VarChar(100)
-    content       String
-    facilitator   User     @relation(fields: [facilitatorId], references: [id])
-    facilitatorId String   @map("facilitator_id") @db.Uuid
-    createdAt     DateTime @default(now()) @map("created_at")
+  id            String   @id @default(uuid()) @map("guide_id") @db.Uuid
+  title         String   @db.VarChar(100)
+  content       String
+  facilitator   User     @relation(fields: [facilitatorId], references: [id])
+  facilitatorId String   @map("facilitator_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
 
-    @@map("study_guides")
+  @@map("study_guides")
 }
 
 model RoleRequest {
-    id            String          @id @default(uuid()) @map("request_id") @db.Uuid
-    user          User            @relation("RequestingUser", fields: [userId], references: [id])
-    userId        String          @unique @map("user_id") @db.Uuid
-    reviewer      User?           @relation("ReviewingUser", fields: [reviewerId], references: [id])
-    reviewerId    String?         @map("reviewed_by") @db.Uuid
-    requestedRole RequestableRole @map("requested_role")
-    status        Status          @default(PENDING)
-    submittedAt   DateTime        @map("submitted_at")
-    reviewedAt    DateTime?       @default(now()) @map("reviewed_at")
+  id            String          @id @default(uuid()) @map("request_id") @db.Uuid
+  user          User            @relation("RequestingUser", fields: [userId], references: [id])
+  userId        String          @unique @map("user_id") @db.Uuid
+  reviewer      User?           @relation("ReviewingUser", fields: [reviewerId], references: [id])
+  reviewerId    String?         @map("reviewed_by") @db.Uuid
+  requestedRole RequestableRole @map("requested_role")
+  status        Status          @default(PENDING)
+  submittedAt   DateTime        @map("submitted_at")
+  reviewedAt    DateTime?       @default(now()) @map("reviewed_at")
 
-    @@map("role_requests")
+  @@map("role_requests")
 }
 
 model Hymn {
-    id          String        @id @default(uuid())
-    hymn_number Int
-    title       String
-    lyrics      String
-    versions    HymnVersion[]
+  id          String        @id @default(uuid())
+  hymn_number Int
+  title       String
+  lyrics      String
+  versions    HymnVersion[]
 }
 
 model HymnVersion {
-    id      String  @id @default(uuid())
-    hymn    Hymn    @relation(fields: [hymn_id], references: [id])
-    hymn_id String
-    version Version
+  id      String  @id @default(uuid())
+  hymn    Hymn    @relation(fields: [hymn_id], references: [id])
+  hymn_id String
+  version Version
 }
 
 enum Version {
-    ENGLISH
-    TWI
+  ENGLISH
+  TWI
 }
 
 enum OtpType {
-    SignUpOTP
-    PasswordOTP
+  SignUpOTP
+  PasswordOTP
 }
 
 model Otp {
-    id      String  @id @default(uuid()) @map("otp_id") @db.Uuid
-    otpType OtpType @default(SignUpOTP)
-    code    String  @map("otp_code")
-    user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-    user_id String  @unique @db.Uuid
-    created_at DateTime @default(now())
+  id         String   @id @default(uuid()) @map("otp_id") @db.Uuid
+  otpType    OtpType  @default(SignUpOTP)
+  code       String   @map("otp_code")
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id    String   @unique @db.Uuid
+  created_at DateTime @default(now())
+}
+
+model ChurchLocations {
+  id             String  @id @default(uuid()) @map("location_id") @db.Uuid
+  church_name    String  @map("name")
+  street_name    String? @map("street")
+  google_map_url String  @map("map_url")
+  address        String? @map("address")
+  city           String? @map("city")
 }
