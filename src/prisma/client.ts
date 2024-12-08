@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import 'dotenv/config'
 import {addMinutes, subMinutes} from "date-fns";
+import cron from 'node-cron'
 const prisma = new PrismaClient({
     datasources: {
       db: {
@@ -17,7 +18,7 @@ cron.schedule('0 0 * * *', async () => {
 
         const deletedCount = await prisma.otp.deleteMany({
             where: {
-                createdAt: {
+                created_at: {
                     lt: cutoff,
                 },
             },
