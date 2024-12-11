@@ -11,7 +11,8 @@ const prisma = new PrismaClient({
     log: ['query', 'info', 'warn', 'error'],
 });
 
-cron.schedule('0 0 * * *', async () => {
+
+const cleanupExpiredOTPs = async () => {
     try {
         const now = new Date();
         const cutoff = subMinutes(now, 15);
@@ -28,6 +29,10 @@ cron.schedule('0 0 * * *', async () => {
     } catch (error) {
         console.error('[Cron Job] Failed to clean up OTPs:', error);
     }
-});
+};
+
+cron.schedule('0 */30 * * * *', cleanupExpiredOTPs);
+
+cleanupExpiredOTPs();
 
 export default prisma;
